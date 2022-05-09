@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+
 @ControllerAdvice
 @RestController
 public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
@@ -35,13 +36,21 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
 		return new ResponseEntity<Object>(exception, HttpStatus.NOT_FOUND);
 	}
 
-	@ExceptionHandler(StudentCoursNotFoundException.class)
-	public final ResponseEntity<Object> handleAppointmentNotFoundException(StudentCoursNotFoundException ex,
+	@ExceptionHandler(UserCoursNotFoundException.class)
+	public final ResponseEntity<Object> handleAppointmentNotFoundException(UserCoursNotFoundException ex,
 			WebRequest request) throws Exception {
 		ExceptionResponse exception = new ExceptionResponse(new Date(), ex.getMessage(), request.getDescription(false));
 		return new ResponseEntity<Object>(exception, HttpStatus.NOT_FOUND);
 	}
 
+	
+	@ExceptionHandler(RoleNotFoundException.class)
+	public final ResponseEntity<Object> handleAppointmentNotFoundException(RoleNotFoundException ex,
+			WebRequest request) throws Exception {
+		ExceptionResponse exception = new ExceptionResponse(new Date(), ex.getMessage(), request.getDescription(false));
+		return new ResponseEntity<Object>(exception, HttpStatus.NOT_FOUND);
+	}
+	
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {

@@ -32,6 +32,8 @@ import com.boubyan.me.StudentManagmentSystem.payload.response.MessageResponse;
 import com.boubyan.me.StudentManagmentSystem.repository.RoleRepository;
 import com.boubyan.me.StudentManagmentSystem.repository.UserRepository;
 import com.boubyan.me.StudentManagmentSystem.service.UserDetailsImpl;
+import com.boubyan.me.StudentManagmentSystem.service.RoleServiceImpl;
+import com.boubyan.me.StudentManagmentSystem.service.UserServiceImpl;
 
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -41,79 +43,66 @@ public class AuthController {
 	@Autowired
 	AuthenticationManager authenticationManager;
 	@Autowired
-	UserRepository userRepository;
+	UserServiceImpl userService;
 	@Autowired
-	RoleRepository roleRepository;
+	RoleServiceImpl roleservice;
 	@Autowired
 	PasswordEncoder encoder;
 	@Autowired
 	@Qualifier("jwtUtil")
 	JwtUtils jwtUtils;
+
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(loginRequest.getUsername() ,loginRequest.getPassword()));
+				new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 		String jwt = jwtUtils.generateJwtToken(authentication);
-		
-		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();		
-		List<String> roles = userDetails.getAuthorities().stream()
-				.map(item -> item.getAuthority())
+
+		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+		List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
 				.collect(Collectors.toList());
-		return ResponseEntity.ok(new JwtResponse(jwt, 
-												 userDetails.getId(), 
-												 userDetails.getFirstname(), 
-												 userDetails.getEmail(), 
-												 roles));
+		return ResponseEntity.ok(
+				new JwtResponse(jwt, userDetails.getId(), userDetails.getFirstname(), userDetails.getEmail(), roles));
 	}
+
 	@PostMapping("/signup")
 	public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-		if (userRepository.existsByFirstName(signUpRequest.getUsername())) {
-			return ResponseEntity
-					.badRequest()
-					.body(new MessageResponse("Error: Username is already taken!"));
+		if (userService.existsByFirstName(signUpRequest.getUsername())) {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: Username is already taken!"));
 		}
-		if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-			return ResponseEntity
-					.badRequest()
-					.body(new MessageResponse("Error: Email is already in use!"));
+		if (userService.existsByEmail(signUpRequest.getEmail())) {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
 		}
 		// Create new user's account
-		User user = new User(signUpRequest.getUsername(), 
-							 signUpRequest.getEmail(),
-							 encoder.encode(signUpRequest.getPassword()));
-		user.setAge(20);
-		user.setFamilyName("ebada");
-        user.setStudentCourses(null);
+		User user = new User(signUpRequest.getUsername(), signUpRequest.getEmail(),
+				encoder.encode(signUpRequest.getPassword()));
+		user.setUserCourses(null);
 		Set<String> strRoles = signUpRequest.getRole();
 		Set<Role> roles = new HashSet<>();
 		if (strRoles == null) {
-			Role userRole = roleRepository.findByRoleName(ERole.ROLE_USER)
-					.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+			Role userRole = roleservice.findByRoleName(ERole.ROLE_USER);
 			roles.add(userRole);
 		} else {
 			strRoles.forEach(role -> {
 				switch (role) {
 				case "admin":
-					Role adminRole = roleRepository.findByRoleName(ERole.ROLE_ADMIN)
-							.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+					Role adminRole = roleservice.findByRoleName(ERole.ROLE_ADMIN);
 					roles.add(adminRole);
 					break;
 				case "mod":
-					Role modRole = roleRepository.findByRoleName(ERole.ROLE_MODERATOR)
-							.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+					Role modRole = roleservice.findByRoleName(ERole.ROLE_MODERATOR);
 					roles.add(modRole);
 					break;
 				default:
-					Role userRole = roleRepository.findByRoleName(ERole.ROLE_USER)
-							.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+					Role userRole = roleservice.findByRoleName(ERole.ROLE_USER);
+
 					roles.add(userRole);
 				}
 			});
 		}
 		user.setRoles(roles);
-		userRepository.save(user);
+		userService.save(user);
 		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
 	}
 }
-

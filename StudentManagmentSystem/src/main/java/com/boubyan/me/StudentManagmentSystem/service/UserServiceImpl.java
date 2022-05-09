@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.boubyan.me.StudentManagmentSystem.entity.Course;
 import com.boubyan.me.StudentManagmentSystem.entity.User;
+import com.boubyan.me.StudentManagmentSystem.exception.UserNotFoundException;
 import com.boubyan.me.StudentManagmentSystem.repository.UserRepository;
 
 @Service
@@ -33,7 +34,7 @@ public class UserServiceImpl implements UserService {
 	public User findById(int userId) {
 		// TODO Auto-generated method stub
 		Optional<User> user = repo.findById(userId);
-		return user.orElse(null);
+		return user.orElseThrow(() -> new UserNotFoundException("Error: User is not found with id: " + userId));
 	}
 
 	@Override
@@ -67,16 +68,27 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public User findByUserName(String userName) {
 		// TODO Auto-generated method stub
-		return repo.findByFirstName(userName).orElse(null);
+		return repo.findByFirstName(userName)
+				.orElseThrow(() -> new UserNotFoundException("Error: User is not found with userName: " + userName));
 	}
 
-//	@Override
-//	public void cancelCourse(int userId, int courseId) {
-//		// TODO Auto-generated method stub
-//		User user = findById(userId);
-//		Course course = coursService.findById(courseId);
-//		userCourseService.cancel(user, course);
-//
-//	}
+	@Override
+	public User findByEmail(String email) {
+		// TODO Auto-generated method stub
+		return repo.findByEmail(email)
+				.orElseThrow(() -> new UserNotFoundException("Error: User is not found with email: " + email));
+	}
+
+	@Override
+	public Boolean existsByFirstName(String firstName) {
+		// TODO Auto-generated method stub
+		return repo.existsByFirstName(firstName);
+	}
+
+	@Override
+	public Boolean existsByEmail(String email) {
+		// TODO Auto-generated method stub
+		return repo.existsByEmail(email);
+	}
 
 }

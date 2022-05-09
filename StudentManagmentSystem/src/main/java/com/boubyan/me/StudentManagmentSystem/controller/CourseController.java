@@ -22,12 +22,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.boubyan.me.StudentManagmentSystem.entity.Course;
 import com.boubyan.me.StudentManagmentSystem.entity.User;
 import com.boubyan.me.StudentManagmentSystem.entity.UserCourse;
+import com.boubyan.me.StudentManagmentSystem.exception.CourseNotFoundException;
 import com.boubyan.me.StudentManagmentSystem.service.CourseServiceImpl;
 
 import net.spy.memcached.MemcachedClient;
@@ -47,14 +47,23 @@ public class CourseController {
 
 	@GetMapping
 	public List<Course> findAll() {
+		List<Course> cachedCourseList;
+		cachedCourseList = (List<Course>) memcachedClient.get("all_courses");
+		if (cachedCourseList != null || !cachedCourseList.isEmpty()) {
+			return cachedCourseList;
+		}
+
 		List<Course> courseList = service.findAll();
-		memcachedClient.set("all_courses", 0, courseList.get(0));
+		if (courseList == null || courseList.isEmpty())
+			throw new CourseNotFoundException("empt course list");
+		cachedCourseList = (List<Course>) memcachedClient.set("all_courses", 0, courseList);
 		return courseList;
 	}
 
 	@GetMapping(path = "/{id}")
 	public Course findById(@PathVariable int id) {
-		return service.findById(id);
+		Course course = service.findById(id);
+		return course;
 	}
 
 	@PostMapping
@@ -63,9 +72,11 @@ public class CourseController {
 		Course savedCourse = service.save(course);
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
 				.buildAndExpand(savedCourse.getId()).toUri();
-		Course courseList = (Course) memcachedClient.get("all_courses");
+		List<Course> courseList = (List<Course>) memcachedClient.get("all_courses");
+		courseList.add(savedCourse);
+		memcachedClient.set("all_courses", 0, courseList);
 //        courseList.stream().forEach(c->System.out.print(c.getCourseDescription()));
-		System.out.print(courseList.getCourseDescription());
+
 		return ResponseEntity.created(location).build();
 	}
 
@@ -98,27 +109,9 @@ public class CourseController {
 		service.cancel(courseId);
 	}
 
-//	@GetMapping(path = "/{id}/download")
-//	public ResponseEntity<InputStreamResource> download(@PathVariable int id) throws IOException {
-//	
-//	    // ... F:\course-schedule\Math.pdf
-//		System.out.print(path);
-//        Course course=findById(id);
-//        
-//        String fullPath=path+course.getCourseSchedule()+".pdf";
-//        File file = new File(fullPath);
-//
-//	    InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
-//        
-//	    return ResponseEntity.ok()
-//	            .header(HttpHeaders.CONTENT_DISPOSITION, "attchment:filename=\""+course.getCourseSchedule()+"\"")
-//	            .contentType(MediaType.APPLICATION_PDF).contentLength(file.length())
-//	            .body(resource);
-//	}
 	@GetMapping(path = "/{id}/download")
-	public StreamingResponseBody getSteamingFile(@PathVariable int id, HttpServletResponse response)
-			throws IOException {
-		Course course = findById(id);
+	public void getSteamingFile(@PathVariable int id, HttpServletResponse response) throws IOException {
+		Course course = service.findById(id);
 
 		String fullPath = path + course.getCourseSchedule() + ".pdf";
 		File file = new File(fullPath);
@@ -126,13 +119,8 @@ public class CourseController {
 		response.setContentType("application/pdf");
 		response.setHeader("Content-Disposition", "attchment:filename=\"" + course.getCourseSchedule() + "\"");
 		InputStream inputStream = new FileInputStream(file);
-		return outputStream -> {
-			int nRead;
-			byte[] data = new byte[1024];
-			while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
-				System.out.println("Writing some bytes..");
-				outputStream.write(data, 0, nRead);
-			}
-		};
+		org.apache.commons.io.IOUtils.copy(inputStream, response.getOutputStream());
+		response.flushBuffer();
+
 	}
 }

@@ -22,6 +22,8 @@ import com.boubyan.me.StudentManagmentSystem.exception.CourseNotFoundException;
 import com.boubyan.me.StudentManagmentSystem.exception.UserNotFoundException;
 import com.boubyan.me.StudentManagmentSystem.service.UserService;
 
+import net.spy.memcached.MemcachedClient;
+
 @RestController
 @RequestMapping(path = "/users")
 public class UserController {
@@ -29,16 +31,27 @@ public class UserController {
 	@Autowired
 	UserService service;
 
+	@Autowired
+	private MemcachedClient memcachedClient;
+
 	@GetMapping
 	public List<User> findAll() {
+		List<User> cachedUserList;
+		cachedUserList = (List<User>) memcachedClient.get("all_users");
+		if (cachedUserList != null || !cachedUserList.isEmpty()) {
+			return cachedUserList;
+		}
 		List<User> userList = service.findAll();
 		if (userList == null || userList.isEmpty())
 			throw new UserNotFoundException("user list empty");
+
+		cachedUserList = (List<User>) memcachedClient.set("all_users", 0, userList);
 		return userList;
 	}
 
 	@GetMapping(path = "/{id}")
 	public User findById(@PathVariable int id) {
+
 		return service.findById(id);
 
 	}
@@ -50,6 +63,10 @@ public class UserController {
 
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(savedUser.getId())
 				.toUri();
+		List<User> cacheduserList = (List<User>) memcachedClient.get("all_users");
+		cacheduserList.add(savedUser);
+		memcachedClient.set("all_users", 0, cacheduserList);
+
 		return ResponseEntity.created(location).build();
 	}
 
@@ -70,11 +87,5 @@ public class UserController {
 		return userCourseList;
 
 	}
-
-//	@PutMapping(path = "/{id}/courses/{courseId}")
-//	public void cancelCourse(@PathVariable int id, @PathVariable int courseId) {
-//		service.cancelCourse(id, courseId);
-//
-//	}
 
 }
