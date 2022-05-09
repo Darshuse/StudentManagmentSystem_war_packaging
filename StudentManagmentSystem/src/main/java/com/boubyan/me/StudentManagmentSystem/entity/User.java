@@ -21,7 +21,6 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
@@ -42,24 +41,24 @@ public class User implements Serializable {
 
 	private int age;
 
-	@NotBlank(message = "email should not be empty")
-	@Size(max = 50, message = "not allowed more than 50 characters ")
-	@Email
+//	@NotBlank(message = "email should not be empty")
+//	@Size(max = 50, message = "not allowed more than 50 characters ")
+//	@Email
 	private String email;
 
-	@NotBlank(message = "family name should not be empty ")
-	@Size(min = 3, max = 20)
+//	@NotBlank(message = "family name should not be empty ")
+//	@Size(min = 3, max = 20)
 	@Column(name = "family_name")
 	private String familyName;
 
-	@NotBlank(message = "username should not be empty ")
-	@Size(min = 3, max = 20, message = "username should be more than 2 characters and less than 21 characters")
+//	@NotBlank(message = "username should not be empty ")
+//	@Size(min = 3, max = 20, message = "username should be more than 2 characters and less than 21 characters")
 	@Column(name = "first_name")
 	private String firstName;
 
 	@JsonIgnore
-	@NotBlank(message = "password should not be empty ")
-	@Size(min = 8, message = "password should be more than 8 characters")
+//	@NotBlank(message = "password should not be empty ")
+//	@Size(min = 8, message = "password should be more than 8 characters")
 	@Column(name = "password")
 	private String password;
 
@@ -73,7 +72,7 @@ public class User implements Serializable {
 	@JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Set<Role> roles = new HashSet<>();
 
-	public User(String email, String firstName, String password) {
+	public User( String firstName,String email, String password) {
 		super();
 		this.email = email;
 		this.firstName = firstName;
@@ -161,4 +160,5 @@ public class User implements Serializable {
 		this.roles = roles;
 	}
 
+	
 }

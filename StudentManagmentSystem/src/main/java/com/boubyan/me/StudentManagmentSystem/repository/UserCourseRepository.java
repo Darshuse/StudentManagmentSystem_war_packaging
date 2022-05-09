@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Isolation;
@@ -17,17 +18,17 @@ import com.boubyan.me.StudentManagmentSystem.entity.UserCourse;
 import com.boubyan.me.StudentManagmentSystem.entity.UserCoursePK;
 @Repository
 @Transactional
-public interface UserCourseRepository extends JpaRepository<UserCourse, UserCoursePK> {
+public interface UserCourseRepository extends JpaRepository<UserCourse, Integer> {
 
-	@Query("SELECT sc.course FROM UserCourse sc join User u on  sc.id.userId = u.id where u.id = ?1")
+	@Query("SELECT sc.course FROM UserCourse sc  where sc.user.id = ?1")
 	public List<Course> findByUser(int userId);
 	
-	@Query("SELECT sc.user FROM UserCourse sc join Course c on sc.id.courseId = c.id where c.id = ?1")
+	@Query("SELECT sc.user FROM UserCourse sc  where sc.course.id = ?1")
 	public List<User> findByCourse(int courseId);
 	
-	@Query(
-			  value = "SELECT * FROM user_courses u WHERE u.course_id = ?1 and u.user_id =?2 ", 
-			  nativeQuery = true)
-	    @Transactional(propagation = Propagation.REQUIRED,isolation = Isolation.DEFAULT)
-	public Optional<UserCourse> findByCourseAndUser(int course,int user);
+	@Query("SELECT sc FROM UserCourse sc   where  sc.user.id = ?1 and sc.course.id = ?2 ")
+	public Optional<UserCourse> findByUserAndCourse(int userId,int courseId);
+	@Modifying
+	@Query(value = "DELETE  FROM UserCourse uc   where  uc.user.id = ?1 and uc.course.id = ?2 ")
+	public void deleteByUserAndCourse(int userId,int courseId);
 }

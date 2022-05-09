@@ -7,10 +7,14 @@ import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+
 
 
 /**
@@ -23,29 +27,36 @@ import javax.persistence.Table;
 public class UserCourse implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	@EmbeddedId
-	private UserCoursePK id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
 	
 	@ManyToOne(cascade=CascadeType.ALL, fetch = FetchType.LAZY)
-	@JoinColumn(name="course_id",insertable=false, updatable=false)
+	@JoinColumn(name="course_id")
 	private Course course;
 
 	//bi-directional many-to-one association to Student
-	
-	@Column(name = "user_id",insertable=false, updatable=false)
+	@ManyToOne(cascade=CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id")
 	private User user;
 
 
 	public UserCourse() {
 	}
 
-	public UserCoursePK getId() {
-		return this.id;
+	
+
+	public int getId() {
+		return id;
 	}
 
-	public void setId(UserCoursePK id) {
+
+
+	public void setId(int id) {
 		this.id = id;
 	}
+
+
 
 	public Course getCourse() {
 		return course;

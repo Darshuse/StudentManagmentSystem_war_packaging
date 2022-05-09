@@ -12,7 +12,7 @@ public interface UserCourseService {
 
 	public UserCourse register(UserCourse userCourse);
 	
-	public UserCourse findById(UserCoursePK userCourse);
+	public UserCourse findById( int userCourse);
 
 	public void cancel(Course course,User user);
 

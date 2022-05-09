@@ -46,8 +46,8 @@ public class UserCourseServiceImpl implements UserCourseService {
 	@Override
 	public void cancel(Course course,User user) {
 		// TODO Auto-generated method stub
-		Optional<UserCourse> userCourse=repo.findByCourseAndUser(course.getId(),user.getId());
-       repo.delete(userCourse.get());
+		Optional<UserCourse> userCourse=repo.findByUserAndCourse(user.getId(),course.getId());
+		repo.deleteByUserAndCourse(user.getId(),course.getId());
 	}
 
 	@Override
@@ -60,7 +60,7 @@ public class UserCourseServiceImpl implements UserCourseService {
 
 
 	@Override
-	public UserCourse findById(UserCoursePK userCourse) {
+	public UserCourse findById(int userCourse) {
 		// TODO Auto-generated method stub
 		return repo.findById(userCourse).orElse(null);
 	}

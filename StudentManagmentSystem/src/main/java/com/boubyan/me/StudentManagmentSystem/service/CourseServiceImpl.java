@@ -82,8 +82,9 @@ public class CourseServiceImpl implements CoursService {
 		String userName = currentUser.getFirstname();
 		UserCourse userCourse = new UserCourse();
 		User user = uservice.findByUserName(userName);
+		Course registeredCourse=findById(course.getId());
 		userCourse.setUser(user);
-		userCourse.setCourse(course);
+		userCourse.setCourse(registeredCourse);
 		return userCourseService.register(userCourse);
 	}
 
@@ -104,7 +105,8 @@ public class CourseServiceImpl implements CoursService {
 				.getPrincipal();
 		String userName = currentUser.getFirstname();
 		User user = uservice.findByUserName(userName);
-		Course course = repo.findById(courseId).orElse(null);
+		Course course = repo.findById(courseId)
+				.orElseThrow(() -> new CourseNotFoundException("Error: Course is not found with id: "+courseId));
 		userCourseService.cancel(course, user);
 	}
 

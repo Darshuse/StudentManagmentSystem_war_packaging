@@ -48,8 +48,9 @@ public class CourseController {
 	@GetMapping
 	public List<Course> findAll() {
 		List<Course> cachedCourseList;
-		cachedCourseList = (List<Course>) memcachedClient.get("all_courses");
-		if (cachedCourseList != null || !cachedCourseList.isEmpty()) {
+		;
+		if ( memcachedClient.get("all_courses") != null ) {
+			cachedCourseList= (List<Course>) memcachedClient.get("all_courses");
 			return cachedCourseList;
 		}
 
@@ -93,7 +94,7 @@ public class CourseController {
 		service.delete(id);
 	}
 
-	@GetMapping(path = "/{id}/students")
+	@GetMapping(path = "/{id}/users")
 	public List<User> findUserList(@PathVariable int id) {
 		return service.findUserList(id);
 	}

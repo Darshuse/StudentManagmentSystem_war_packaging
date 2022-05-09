@@ -36,16 +36,9 @@ public class UserController {
 
 	@GetMapping
 	public List<User> findAll() {
-		List<User> cachedUserList;
-		cachedUserList = (List<User>) memcachedClient.get("all_users");
-		if (cachedUserList != null || !cachedUserList.isEmpty()) {
-			return cachedUserList;
-		}
 		List<User> userList = service.findAll();
 		if (userList == null || userList.isEmpty())
 			throw new UserNotFoundException("user list empty");
-
-		cachedUserList = (List<User>) memcachedClient.set("all_users", 0, userList);
 		return userList;
 	}
 
